@@ -62,119 +62,6 @@ export default function Dashboard({ setIsAuthenticated }) {
     { value: 'me', label: 'Mechanical Engineering (ME)' },
   ]
 
-  // Sample files data with engineering courses
-  const mockFiles = [
-    {
-      id: '1',
-      fileName: 'Data Structures and Algorithms Notes',
-      uploader: 'Alex Kumar',
-      uploadedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-      fileSize: 2457600,
-      fileType: 'application/pdf',
-      semester: 'Semester 3',
-      course: 'Computer Science and Engineering (CSE)',
-      description: 'Comprehensive notes covering arrays, linked lists, trees, and graph algorithms'
-    },
-    {
-      id: '2',
-      fileName: 'Machine Learning Fundamentals',
-      uploader: 'Priya Sharma',
-      uploadedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-      fileSize: 3145728,
-      fileType: 'application/pdf',
-      semester: 'Semester 6',
-      course: 'CSE (Artificial Intelligence and Machine Learning)',
-      description: 'Introduction to supervised and unsupervised learning algorithms'
-    },
-    {
-      id: '3',
-      fileName: 'Database Management Systems Lab',
-      uploader: 'Rahul Singh',
-      uploadedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
-      fileSize: 1048576,
-      fileType: 'application/pdf',
-      semester: 'Semester 4',
-      course: 'Computer Science and Engineering (CSE)',
-      description: 'SQL queries, normalization, and database design principles'
-    },
-    {
-      id: '4',
-      fileName: 'Digital Signal Processing',
-      uploader: 'Anita Patel',
-      uploadedAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
-      fileSize: 5242880,
-      fileType: 'application/pdf',
-      semester: 'Semester 5',
-      course: 'Electronics and Communication Engineering (ECE)',
-      description: 'Signal analysis, filtering, and Fourier transforms'
-    },
-    {
-      id: '5',
-      fileName: 'Software Engineering Project Report',
-      uploader: 'Vikram Reddy',
-      uploadedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-      fileSize: 524288,
-      fileType: 'application/pdf',
-      semester: 'Semester 7',
-      course: 'Computer Science and Engineering (CSE)',
-      description: 'Complete project documentation with UML diagrams and code'
-    },
-    {
-      id: '6',
-      fileName: 'Computer Networks Assignment',
-      uploader: 'Sneha Gupta',
-      uploadedAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-      fileSize: 1572864,
-      fileType: 'application/pdf',
-      semester: 'Semester 5',
-      course: 'Computer Science and Engineering (CSE)',
-      description: 'OSI model, TCP/IP protocols, and network security'
-    },
-    {
-      id: '7',
-      fileName: 'Artificial Intelligence Lab Manual',
-      uploader: 'Rajesh Kumar',
-      uploadedAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
-      fileSize: 2097152,
-      fileType: 'application/pdf',
-      semester: 'Semester 6',
-      course: 'Artificial Intelligence (AI)',
-      description: 'Python implementations of AI algorithms and neural networks'
-    },
-    {
-      id: '8',
-      fileName: 'Microprocessor and Microcontroller',
-      uploader: 'Deepika Singh',
-      uploadedAt: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString(),
-      fileSize: 3145728,
-      fileType: 'application/pdf',
-      semester: 'Semester 4',
-      course: 'Electronics and Communication Engineering (ECE)',
-      description: '8086 architecture, assembly programming, and interfacing'
-    },
-    {
-      id: '9',
-      fileName: 'Data Science Project',
-      uploader: 'Arjun Mehta',
-      uploadedAt: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000).toISOString(),
-      fileSize: 4194304,
-      fileType: 'application/pdf',
-      semester: 'Semester 7',
-      course: 'CSE (Data Science)',
-      description: 'Complete data analysis project with Python and R implementations'
-    },
-    {
-      id: '10',
-      fileName: 'Information Security Notes',
-      uploader: 'Kavya Nair',
-      uploadedAt: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000).toISOString(),
-      fileSize: 2621440,
-      fileType: 'application/pdf',
-      semester: 'Semester 6',
-      course: 'CSE (Internet of Things & Cyber Security Including Blockchain Technology)',
-      description: 'Cryptography, network security, and blockchain fundamentals'
-    }
-  ]
 
   useEffect(() => {
     const userData = localStorage.getItem('user')
@@ -187,38 +74,11 @@ export default function Dashboard({ setIsAuthenticated }) {
   const fetchFiles = async () => {
     setLoading(true)
     try {
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 500))
-      
-      // Filter mock data
-      let filteredFiles = [...mockFiles]
-      
-      if (filters.search) {
-        filteredFiles = filteredFiles.filter(file =>
-          file.fileName.toLowerCase().includes(filters.search.toLowerCase()) ||
-          file.description?.toLowerCase().includes(filters.search.toLowerCase())
-        )
-      }
-      
-      if (filters.semester) {
-        filteredFiles = filteredFiles.filter(file =>
-          file.semester === `Semester ${filters.semester}`
-        )
-      }
-      
-      if (filters.course) {
-        filteredFiles = filteredFiles.filter(file =>
-          file.course.toLowerCase() === courses.find(c => c.value === filters.course)?.label.toLowerCase()
-        )
-      }
-      
-      setFiles(filteredFiles)
-      
-      // Uncomment when backend is ready
-      // const data = await filesAPI.getAll(filters)
-      // setFiles(data)
+      const data = await filesAPI.getAll(filters)
+      setFiles(data.data || [])
     } catch (error) {
       console.error('Error fetching files:', error)
+      setFiles([])
     } finally {
       setLoading(false)
     }
@@ -228,37 +88,15 @@ export default function Dashboard({ setIsAuthenticated }) {
     try {
       console.log('Downloading file:', file.fileName)
       
-      // For demo purposes, create a sample PDF blob
-      const sampleContent = `Sample PDF Content for ${file.fileName}
-      
-Course: ${file.course}
-Semester: ${file.semester}
-Uploaded by: ${file.uploader}
-Description: ${file.description || 'No description provided'}
-
-This is a demo file to demonstrate the download functionality.
-In a real application, this would be the actual file content.`
-      
-      const blob = new Blob([sampleContent], { type: 'text/plain' })
+      const blob = await filesAPI.download(file._id)
       const url = window.URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
-      a.download = `${file.fileName}.txt`
+      a.download = file.fileName
       document.body.appendChild(a)
       a.click()
       window.URL.revokeObjectURL(url)
       document.body.removeChild(a)
-      
-      // Uncomment when backend is ready
-      // const blob = await filesAPI.download(file.id)
-      // const url = window.URL.createObjectURL(blob)
-      // const a = document.createElement('a')
-      // a.href = url
-      // a.download = file.fileName
-      // document.body.appendChild(a)
-      // a.click()
-      // window.URL.revokeObjectURL(url)
-      // document.body.removeChild(a)
     } catch (error) {
       console.error('Error downloading file:', error)
     }
@@ -476,12 +314,12 @@ In a real application, this would be the actual file content.`
               <div className="text-center">
                 <FileText className="mx-auto text-gray-600 mb-4" size={64} />
                 <h3 className="text-xl font-semibold text-gray-300 mb-2">
-                  No files found
+                  No files available
                 </h3>
                 <p className="text-gray-400 mb-6">
                   {hasActiveFilters
                     ? 'Try adjusting your filters'
-                    : 'Be the first to upload a document!'}
+                    : 'No documents have been uploaded yet.'}
                 </p>
                 {!hasActiveFilters && (
                   <Button
@@ -497,7 +335,7 @@ In a real application, this would be the actual file content.`
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 max-w-7xl">
               {files.map((file) => (
                 <FileCard
-                  key={file.id}
+                  key={file._id}
                   file={file}
                   onDownload={handleDownload}
                 />
