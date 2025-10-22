@@ -1,6 +1,6 @@
 import axios from 'axios'
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
+const API_URL = import.meta.env.VITE_API_URL || 'https://docdom-backend.onrender.com/api'
 
 // Create axios instance
 const api = axios.create({
@@ -27,12 +27,17 @@ api.interceptors.request.use(
 // Auth API
 export const authAPI = {
   register: async (userData) => {
-    const response = await api.post('/auth/register', userData)
+    const response = await api.post('/register', userData)
     return response.data
   },
   
   login: async (credentials) => {
-    const response = await api.post('/auth/login', credentials)
+    const response = await api.post('/login', credentials)
+    return response.data
+  },
+  
+  getProfile: async () => {
+    const response = await api.get('/user/me')
     return response.data
   },
   
@@ -46,11 +51,6 @@ export const authAPI = {
 export const collegesAPI = {
   getAll: async () => {
     const response = await api.get('/colleges')
-    return response.data
-  },
-  
-  search: async (query) => {
-    const response = await api.get(`/colleges/search?q=${query}`)
     return response.data
   }
 }
@@ -74,6 +74,11 @@ export const filesAPI = {
         'Content-Type': 'multipart/form-data'
       }
     })
+    return response.data
+  },
+  
+  getById: async (fileId) => {
+    const response = await api.get(`/files/${fileId}`)
     return response.data
   },
   
