@@ -25,20 +25,16 @@ export default function Registration({ setIsAuthenticated }) {
 
   const fetchColleges = async () => {
     try {
-      // Mock data for colleges - replace with actual API call
-      const mockColleges = [
-        { value: '1', label: 'Qis College Of Engineering And Technology' },
-        { value: '2', label: 'Gayatri Vidya Parishad College for Degree & P.G. Courses' },
-        
-        
-      ]
-      setColleges(mockColleges)
-      
-      // Uncomment when backend is ready
-      // const data = await collegesAPI.getAll()
-      // setColleges(data.map(c => ({ value: c.id, label: c.name })))
+      const data = await collegesAPI.getAll()
+      setColleges(data.data.map(c => ({ value: c._id, label: c.name })))
     } catch (error) {
       console.error('Error fetching colleges:', error)
+      // Fallback to mock data if API fails
+      const mockColleges = [
+        { value: '68f87d37f7193de33a82eb99', label: 'Qis College Of Engineering And Technology' },
+        { value: '68f87d37f7193de33a82eb98', label: 'Gayatri Vidya Parishad College for Degree & P.G. Courses' },
+      ]
+      setColleges(mockColleges)
     }
   }
 
@@ -86,9 +82,9 @@ export default function Registration({ setIsAuthenticated }) {
     try {
       const response = await authAPI.register(formData)
       
-      // Store token and user data
-      localStorage.setItem('authToken', response.token)
-      localStorage.setItem('user', JSON.stringify(response.user))
+      // Store token and user data based on backend response format
+      localStorage.setItem('authToken', response.data.token)
+      localStorage.setItem('user', JSON.stringify(response.data))
       
       setIsAuthenticated(true)
       navigate('/dashboard')
