@@ -78,7 +78,29 @@ export default function Dashboard({ setIsAuthenticated }) {
       console.log('Fetching files with filters:', filters)
       const data = await filesAPI.getAll(filters)
       console.log('Files API response:', data)
-      setFiles(data.data || [])
+      const list = data.data || data || []
+
+      // Apply client-side filter for My Uploads to prevent leakage
+      let filtered = list
+      if (filters.myUploads) {
+        const stored = localStorage.getItem('user')
+        let currentUserId = null
+        try {
+          const u = stored ? JSON.parse(stored) : null
+          currentUserId = u?._id || u?.user?._id || u?.data?._id || null
+        } catch (_e) {}
+
+        if (currentUserId) {
+          filtered = list.filter((f) => {
+            // uploader may be an object or an id/string, or there may be uploaderId
+            const uploader = f.uploader
+            const uploaderId = f.uploaderId || (typeof uploader === 'object' ? uploader?._id : uploader)
+            return String(uploaderId || '').trim() === String(currentUserId).trim()
+          })
+        }
+      }
+
+      setFiles(filtered)
     } catch (error) {
       console.error('Error fetching files:', error)
       setFiles([])
