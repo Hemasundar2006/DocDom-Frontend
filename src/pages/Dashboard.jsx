@@ -166,17 +166,52 @@ export default function Dashboard({ setIsAuthenticated }) {
         console.log('Using API endpoint as fallback for download:', absoluteUrl)
       }
 
-      const a = document.createElement('a')
-      a.href = absoluteUrl
-      a.download = fileName
-      a.style.display = 'none'
-      document.body.appendChild(a)
-      a.click()
+      // Fetch file as blob for proper download with filename
+      try {
+        const response = await fetch(absoluteUrl, {
+          method: 'GET',
+          credentials: 'include',
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+          }
+        })
 
-      setTimeout(() => {
-        document.body.removeChild(a)
-        setDownloadingFile(null)
-      }, 100)
+        if (!response.ok) {
+          throw new Error(`Download failed: ${response.status}`)
+        }
+
+        const blob = await response.blob()
+        console.log('Downloaded blob:', blob.type, blob.size)
+        
+        // Create blob URL and trigger download
+        const blobUrl = window.URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = blobUrl
+        a.download = fileName
+        a.style.display = 'none'
+        document.body.appendChild(a)
+        a.click()
+
+        setTimeout(() => {
+          document.body.removeChild(a)
+          window.URL.revokeObjectURL(blobUrl)
+          setDownloadingFile(null)
+        }, 100)
+      } catch (fetchError) {
+        console.error('Blob download failed, trying direct download:', fetchError)
+        // Fallback to direct download
+        const a = document.createElement('a')
+        a.href = absoluteUrl
+        a.download = fileName
+        a.style.display = 'none'
+        document.body.appendChild(a)
+        a.click()
+
+        setTimeout(() => {
+          document.body.removeChild(a)
+          setDownloadingFile(null)
+        }, 100)
+      }
 
     } catch (error) {
       console.error('Error downloading file:', error)
