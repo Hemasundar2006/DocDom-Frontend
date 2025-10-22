@@ -57,7 +57,7 @@ export default function Registration({ setIsAuthenticated }) {
     if (!formData.email) {
       newErrors.email = 'College email is required'
     } else if (!validateCollegeEmail(formData.email)) {
-      newErrors.email = 'Please enter a valid college email (e.g., .edu, .ac.in)'
+      newErrors.email = 'Please enter a valid college email (e.g., .edu, .ac.in, .qiscet.edu.in)'
     }
 
     // Password validation

@@ -1,6 +1,6 @@
 // Email validation for college domains
 export const validateCollegeEmail = (email) => {
-  const collegeEmailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.(edu|ac\.in|edu\.in)$/
+  const collegeEmailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.(edu|ac\.in|edu\.in|qiscet\.edu\.in)$/
   return collegeEmailRegex.test(email)
 }
 
