@@ -154,7 +154,8 @@ export default function FileUploadModal({ isOpen, onClose, onUploadSuccess }) {
         })
       }, 200)
 
-      await filesAPI.upload(uploadData)
+      const response = await filesAPI.upload(uploadData)
+      console.log('Upload response:', response)
       
       setUploadProgress(100)
       clearInterval(progressInterval)
@@ -164,6 +165,7 @@ export default function FileUploadModal({ isOpen, onClose, onUploadSuccess }) {
       setFormData({ fileName: '', semester: '', course: '', description: '' })
       setErrors({})
       
+      // Call the success callback to refresh the files list
       onUploadSuccess()
       setTimeout(() => {
         onClose()

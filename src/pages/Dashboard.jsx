@@ -74,7 +74,9 @@ export default function Dashboard({ setIsAuthenticated }) {
   const fetchFiles = async () => {
     setLoading(true)
     try {
+      console.log('Fetching files with filters:', filters)
       const data = await filesAPI.getAll(filters)
+      console.log('Files API response:', data)
       setFiles(data.data || [])
     } catch (error) {
       console.error('Error fetching files:', error)
@@ -349,7 +351,12 @@ export default function Dashboard({ setIsAuthenticated }) {
       <FileUploadModal
         isOpen={uploadModalOpen}
         onClose={() => setUploadModalOpen(false)}
-        onUploadSuccess={fetchFiles}
+        onUploadSuccess={() => {
+          // Add a small delay to ensure the backend has processed the file
+          setTimeout(() => {
+            fetchFiles()
+          }, 1000)
+        }}
       />
     </div>
   )
