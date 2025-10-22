@@ -60,21 +60,35 @@ export const formatFileSize = (bytes) => {
   return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i]
 }
 
-// Format date
+// Format date with exact time
 export const formatDate = (dateString) => {
   const date = new Date(dateString)
   const now = new Date()
   const diffTime = Math.abs(now - date)
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+  const diffHours = Math.ceil(diffTime / (1000 * 60 * 60))
+  const diffMinutes = Math.ceil(diffTime / (1000 * 60))
   
-  if (diffDays === 0) return 'Today'
-  if (diffDays === 1) return 'Yesterday'
-  if (diffDays < 7) return `${diffDays} days ago`
-  
-  return date.toLocaleDateString('en-US', { 
-    year: 'numeric', 
-    month: 'short', 
-    day: 'numeric' 
+  // Get exact time
+  const timeString = date.toLocaleTimeString('en-US', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true
   })
+  
+  // Get date string
+  const dateStringFormatted = date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric'
+  })
+  
+  if (diffMinutes < 1) return 'Just now'
+  if (diffMinutes < 60) return `${diffMinutes} min ago at ${timeString}`
+  if (diffHours < 24) return `${diffHours} hr ago at ${timeString}`
+  if (diffDays === 1) return `Yesterday at ${timeString}`
+  if (diffDays < 7) return `${diffDays} days ago at ${timeString}`
+  
+  return `${dateStringFormatted} at ${timeString}`
 }
 

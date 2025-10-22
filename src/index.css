@@ -3,8 +3,13 @@
 @tailwind utilities;
 
 @layer base {
-  body {
+  html, body {
     @apply text-gray-100 antialiased;
+    overflow-x: hidden;
+  }
+  
+  * {
+    box-sizing: border-box;
   }
 }
 
@@ -23,6 +28,11 @@
   
   .scrollbar-thin::-webkit-scrollbar-thumb:hover {
     @apply bg-dark-hover;
+  }
+  
+  .break-words {
+    word-break: break-word;
+    overflow-wrap: break-word;
   }
 }
 

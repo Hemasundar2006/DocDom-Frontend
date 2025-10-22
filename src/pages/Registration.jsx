@@ -32,7 +32,6 @@ export default function Registration({ setIsAuthenticated }) {
       // Fallback to mock data if API fails
       const mockColleges = [
         { value: '68f87d37f7193de33a82eb99', label: 'Qis College Of Engineering And Technology' },
-        { value: '68f87d37f7193de33a82eb98', label: 'Gayatri Vidya Parishad College for Degree & P.G. Courses' },
       ]
       setColleges(mockColleges)
     }
@@ -108,7 +107,7 @@ export default function Registration({ setIsAuthenticated }) {
             </div>
           </div>
           <h1 className="text-3xl font-bold text-gray-100 mb-2">
-            Join DocDom
+            Join DocDom💙
           </h1>
           <p className="text-gray-400">
             Create an account to start sharing and accessing documents

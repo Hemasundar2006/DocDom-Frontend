@@ -81,8 +81,20 @@ export default function Dashboard({ setIsAuthenticated }) {
       console.log('Files API response:', data)
       const list = data.data || data || []
 
-      // Apply client-side filter for My Uploads to prevent leakage
+      // Apply client-side filtering
       let filtered = list
+
+      // Filter by search term (file name and description)
+      if (filters.search && filters.search.trim()) {
+        const searchTerm = filters.search.toLowerCase().trim()
+        filtered = filtered.filter((file) => {
+          const fileName = (file.fileName || file.name || '').toLowerCase()
+          const description = (file.description || '').toLowerCase()
+          return fileName.includes(searchTerm) || description.includes(searchTerm)
+        })
+      }
+
+      // Apply client-side filter for My Uploads to prevent leakage
       if (filters.myUploads) {
         const stored = localStorage.getItem('user')
         let currentUserId = null
@@ -92,7 +104,7 @@ export default function Dashboard({ setIsAuthenticated }) {
         } catch (_e) {}
 
         if (currentUserId) {
-          filtered = list.filter((f) => {
+          filtered = filtered.filter((f) => {
             // uploader may be an object or an id/string, or there may be uploaderId
             const uploader = f.uploader
             const uploaderId = f.uploaderId || (typeof uploader === 'object' ? uploader?._id : uploader)
@@ -251,10 +263,73 @@ export default function Dashboard({ setIsAuthenticated }) {
       let absoluteUrl = fileUrl.startsWith('http') ? fileUrl : `${API_ORIGIN}${fileUrl}`
       console.log('Final absolute URL:', absoluteUrl)
 
-      // Simple approach: directly open in new tab for all devices
-      // This ensures files open in browser instead of downloading
-      console.log('Opening file in new tab:', absoluteUrl)
-      window.open(absoluteUrl, '_blank', 'noopener,noreferrer')
+      // For PDF files, try multiple approaches to ensure proper viewing
+      const fileType = file.fileType || file.type || ''
+      const isPDF = fileType.includes('pdf') || (file.fileName || file.name || '').toLowerCase().includes('.pdf')
+      
+      // For all file types, use direct opening to ensure viewing, not downloading
+      console.log('Opening file for viewing:', absoluteUrl)
+      
+      // Method 1: Direct window.open (most reliable for viewing)
+      const newWindow = window.open(absoluteUrl, '_blank', 'noopener,noreferrer')
+      
+      // Method 2: If window.open fails, try with link element
+      if (!newWindow || newWindow.closed) {
+        console.log('Window.open failed, trying link method...')
+        
+        const link = document.createElement('a')
+        link.href = absoluteUrl
+        link.target = '_blank'
+        link.rel = 'noopener noreferrer'
+        link.style.display = 'none'
+        
+        // Add to DOM, click, and remove
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+      }
+      
+      // Method 3: For PDFs, try with proper content-disposition header
+      if (isPDF) {
+        console.log('PDF detected, ensuring proper viewing...')
+        
+        // Try to fetch with proper headers to prevent download
+        fetch(absoluteUrl, {
+          method: 'GET',
+          credentials: 'include',
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+            'Accept': 'application/pdf',
+            'Cache-Control': 'no-cache'
+          }
+        })
+        .then(response => {
+          if (response.ok) {
+            // Check if response has content-disposition header that forces download
+            const contentDisposition = response.headers.get('content-disposition')
+            if (contentDisposition && contentDisposition.includes('attachment')) {
+              console.log('Server is forcing download, using blob approach...')
+              return response.blob()
+            } else {
+              console.log('Server allows viewing, using direct URL')
+              window.open(absoluteUrl, '_blank', 'noopener,noreferrer')
+            }
+          }
+        })
+        .then(blob => {
+          if (blob) {
+            const blobUrl = URL.createObjectURL(blob)
+            window.open(blobUrl, '_blank', 'noopener,noreferrer')
+            // Clean up blob URL after some time
+            setTimeout(() => URL.revokeObjectURL(blobUrl), 60000)
+          }
+        })
+        .catch(error => {
+          console.warn('Fetch approach failed:', error)
+          // Final fallback to direct URL
+          window.open(absoluteUrl, '_blank', 'noopener,noreferrer')
+        })
+      }
       
       // Reset viewing state after a short delay
       setTimeout(() => setViewingFile(null), 1000)
@@ -262,7 +337,19 @@ export default function Dashboard({ setIsAuthenticated }) {
     } catch (error) {
       console.error('Error opening file:', error)
       setViewingFile(null)
-      alert(`Unable to open the file: ${error.message}. Please try downloading instead.`)
+      
+      // Provide more specific error messages
+      let errorMessage = 'Unable to open the file. '
+      if (error.message.includes('fetch')) {
+        errorMessage += 'The file may be protected or the server is not responding. '
+      } else if (error.message.includes('No viewable URL')) {
+        errorMessage += 'File URL is not available. '
+      } else {
+        errorMessage += error.message + '. '
+      }
+      errorMessage += 'Please try downloading the file instead.'
+      
+      alert(errorMessage)
     }
   }
 
@@ -291,7 +378,7 @@ export default function Dashboard({ setIsAuthenticated }) {
   const hasActiveFilters = filters.search || filters.semester || filters.course || filters.myUploads
 
   return (
-    <div className="min-h-screen flex">
+    <div className="min-h-screen flex overflow-x-hidden">
       {/* Sidebar */}
       <aside
         className={`fixed lg:static inset-y-0 left-0 z-50 w-64 bg-dark-card border-r border-dark-border transform transition-transform duration-300 ease-in-out ${
@@ -304,7 +391,7 @@ export default function Dashboard({ setIsAuthenticated }) {
             <div className="p-2 bg-primary rounded-lg">
               <GraduationCap size={24} className="text-white" />
             </div>
-            <h1 className="text-xl font-bold text-gray-100">DocDom</h1>
+            <h1 className="text-xl font-bold text-gray-100">DocDomt💙</h1>
           </div>
 
           {/* User Info */}
@@ -382,7 +469,7 @@ export default function Dashboard({ setIsAuthenticated }) {
       )}
 
       {/* Main Content */}
-      <main className="flex-1 flex flex-col min-w-0">
+      <main className="flex-1 flex flex-col min-w-0 overflow-x-hidden">
         {/* Header */}
         <header className="bg-dark-card border-b border-dark-border p-3 sm:p-4 lg:p-6">
           <div className="flex items-center gap-2 sm:gap-4">
@@ -395,7 +482,7 @@ export default function Dashboard({ setIsAuthenticated }) {
             
             <div className="flex-1 min-w-0">
               <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-100 mb-1 truncate">
-                Document Library
+                DocDomt💙
               </h2>
               <p className="text-gray-400 text-xs sm:text-sm hidden sm:block">
                 Browse and download shared documents
@@ -416,12 +503,12 @@ export default function Dashboard({ setIsAuthenticated }) {
 
         {/* Search and Filters */}
         <div className="bg-dark-card border-b border-dark-border p-3 sm:p-4 lg:p-6">
-          <div className="max-w-7xl">
+          <div className="max-w-7xl mx-auto">
             <div className="mb-3 sm:mb-4">
               <SearchBar
                 value={filters.search}
                 onChange={handleSearchChange}
-                placeholder="Search files..."
+                placeholder="Search by file name..."
               />
             </div>
 
@@ -469,7 +556,7 @@ export default function Dashboard({ setIsAuthenticated }) {
         </div>
 
         {/* Files Grid */}
-        <div className="flex-1 p-3 sm:p-4 lg:p-6 overflow-y-auto scrollbar-thin pb-20 lg:pb-6">
+        <div className="flex-1 p-3 sm:p-4 lg:p-6 overflow-y-auto overflow-x-hidden scrollbar-thin pb-20 lg:pb-6">
           {loading ? (
             <div className="flex items-center justify-center h-64">
               <div className="text-center">
@@ -500,7 +587,7 @@ export default function Dashboard({ setIsAuthenticated }) {
               </div>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6 max-w-7xl">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6 max-w-7xl mx-auto">
               {files.map((file) => (
                 <FileCard
                   key={file._id}

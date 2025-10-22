@@ -20,11 +20,14 @@ export default function FileCard({ file, onDownload, onView, isDownloading = fal
             {getFileIcon(file.fileType || file.type)}
           </div>
           <div className="flex-1 min-w-0">
-            <h3 className="text-sm sm:text-base lg:text-lg font-semibold text-gray-100 truncate group-hover:text-primary transition-colors">
+            <h3 className="text-xs sm:text-sm lg:text-base font-semibold text-gray-100 leading-tight group-hover:text-primary transition-colors break-words">
               {file.fileName || file.name}
             </h3>
-            <p className="text-xs sm:text-sm text-gray-400 mt-1 truncate">
+            <p className="text-xs text-gray-400 mt-1 truncate">
               Uploaded by {typeof file.uploader === 'object' ? file.uploader?.name || 'Anonymous' : file.uploader || 'Anonymous'}
+            </p>
+            <p className="text-xs text-gray-500 mt-1" title={`Uploaded: ${new Date(file.uploadedAt || file.createdAt).toLocaleString()}`}>
+              📅 {formatDate(file.uploadedAt || file.createdAt)}
             </p>
           </div>
         </div>
@@ -46,17 +49,25 @@ export default function FileCard({ file, onDownload, onView, isDownloading = fal
       )}
 
       <div className="flex flex-col sm:flex-row sm:items-center justify-between pt-3 sm:pt-4 border-t border-dark-border gap-3 sm:gap-0">
-        <div className="text-xs sm:text-sm text-gray-500 order-2 sm:order-1">
+        <div className="text-xs sm:text-sm text-gray-500 order-2 sm:order-1 flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
           <span>{formatFileSize(file.fileSize || file.size)}</span>
-          <span className="mx-1 sm:mx-2">•</span>
-          <span>{formatDate(file.uploadedAt || file.createdAt)}</span>
+          <span className="hidden sm:inline">•</span>
+          <span className="text-xs text-gray-600">
+            {new Date(file.uploadedAt || file.createdAt).toLocaleString('en-US', {
+              month: 'short',
+              day: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit',
+              hour12: true
+            })}
+          </span>
         </div>
         <div className="flex items-center gap-2 order-1 sm:order-2">
           <Button
             onClick={() => onView?.(file)}
             variant="secondary"
             className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3 py-1 sm:py-2 hover:bg-primary/20 transition-colors"
-            title="View file in new tab (opens in browser)"
+            title="View file in browser (not download)"
             disabled={isViewing}
           >
             <span className="hidden sm:inline">{isViewing ? 'Opening...' : 'View'}</span>
