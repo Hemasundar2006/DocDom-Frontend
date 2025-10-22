@@ -1,6 +1,14 @@
 import axios from 'axios'
 
 const API_URL = import.meta.env.VITE_API_URL || 'https://docdom-backend.onrender.com/api'
+// Export API origin to build absolute URLs for file downloads when backend returns relative paths
+export const API_ORIGIN = (() => {
+  try {
+    return new URL(API_URL).origin
+  } catch (_e) {
+    return ''
+  }
+})()
 
 // Create axios instance
 const api = axios.create({

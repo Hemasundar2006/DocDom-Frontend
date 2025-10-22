@@ -2,7 +2,10 @@ import { Download, FileText, Image, FileIcon } from 'lucide-react'
 import { formatFileSize, formatDate } from '../utils/validation'
 import Button from './Button'
 
-export default function FileCard({ file, onDownload }) {
+export default function FileCard({ file, onDownload, onView, isDownloading = false }) {
+  // Debug: Log the file object to see its structure
+  console.log('FileCard received file:', file)
+  
   const getFileIcon = (fileType) => {
     if (fileType.includes('pdf')) return <FileText className="text-red-400" size={24} />
     if (fileType.includes('image')) return <Image className="text-blue-400" size={24} />
@@ -21,7 +24,7 @@ export default function FileCard({ file, onDownload }) {
               {file.fileName || file.name}
             </h3>
             <p className="text-sm text-gray-400 mt-1">
-              Uploaded by {file.uploader || 'Anonymous'}
+              Uploaded by {typeof file.uploader === 'object' ? file.uploader?.name || 'Anonymous' : file.uploader || 'Anonymous'}
             </p>
           </div>
         </div>
@@ -32,7 +35,7 @@ export default function FileCard({ file, onDownload }) {
           {file.semester}
         </span>
         <span className="px-2 py-1 bg-purple-500/20 text-purple-300 text-xs rounded-full">
-          {file.course || file.subject}
+          {typeof file.course === 'object' ? file.course?.name || 'Unknown Course' : file.course || file.subject || 'Unknown Course'}
         </span>
       </div>
 
@@ -48,14 +51,25 @@ export default function FileCard({ file, onDownload }) {
           <span className="mx-2">•</span>
           <span>{formatDate(file.uploadedAt || file.createdAt)}</span>
         </div>
-        <Button
-          onClick={() => onDownload(file)}
-          variant="primary"
-          className="flex items-center gap-2"
-        >
-          <Download size={16} />
-          Download
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            onClick={() => onView?.(file)}
+            variant="secondary"
+            className="flex items-center gap-2"
+          >
+            View
+          </Button>
+          <Button
+            onClick={() => onDownload(file)}
+            variant="primary"
+            className="flex items-center gap-2"
+            disabled={isDownloading}
+            loading={isDownloading}
+          >
+            <Download size={16} />
+            {isDownloading ? 'Downloading...' : 'Download'}
+          </Button>
+        </div>
       </div>
     </div>
   )

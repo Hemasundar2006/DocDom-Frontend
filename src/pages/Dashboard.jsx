@@ -15,7 +15,7 @@ import Select from '../components/Select'
 import Button from '../components/Button'
 import FileCard from '../components/FileCard'
 import FileUploadModal from '../components/FileUploadModal'
-import { filesAPI, authAPI } from '../services/api'
+import { filesAPI, authAPI, API_ORIGIN } from '../services/api'
 
 export default function Dashboard({ setIsAuthenticated }) {
   const navigate = useNavigate()
@@ -24,6 +24,7 @@ export default function Dashboard({ setIsAuthenticated }) {
   const [loading, setLoading] = useState(true)
   const [uploadModalOpen, setUploadModalOpen] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [downloadingFile, setDownloadingFile] = useState(null)
   const [filters, setFilters] = useState({
     search: '',
     semester: '',
@@ -88,19 +89,93 @@ export default function Dashboard({ setIsAuthenticated }) {
 
   const handleDownload = async (file) => {
     try {
+      setDownloadingFile(file._id)
       console.log('Downloading file:', file.fileName)
-      
-      const blob = await filesAPI.download(file._id)
-      const url = window.URL.createObjectURL(blob)
+
+      // Ensure proper file extension for PDFs
+      let fileName = file.fileName || file.name || 'document'
+      if (!fileName.includes('.')) fileName = `${fileName}.pdf`
+
+      // Prefer using fileUrl from the list; if not present, fetch metadata by id
+      let fileUrl = file.fileUrl
+      if (!fileUrl) {
+        try {
+          const meta = await filesAPI.getById(file._id)
+          const metaData = meta.data || meta
+          fileUrl = metaData?.fileUrl
+          if (!fileName && metaData?.fileName) fileName = metaData.fileName
+        } catch (e) {
+          console.warn('Failed to load file metadata for download', e)
+        }
+      }
+
+      if (!fileUrl) throw new Error('No downloadable URL available')
+
+      // Build absolute URL if backend returns a relative path
+      const absoluteUrl = fileUrl.startsWith('http') ? fileUrl : `${API_ORIGIN}${fileUrl}`
+
       const a = document.createElement('a')
-      a.href = url
-      a.download = file.fileName
+      a.href = absoluteUrl
+      a.download = fileName
+      a.style.display = 'none'
       document.body.appendChild(a)
       a.click()
-      window.URL.revokeObjectURL(url)
-      document.body.removeChild(a)
+
+      setTimeout(() => {
+        document.body.removeChild(a)
+        setDownloadingFile(null)
+      }, 100)
+
     } catch (error) {
       console.error('Error downloading file:', error)
+      setDownloadingFile(null)
+      alert('Failed to download file. Please try again.')
+    }
+  }
+
+  const handleView = async (file) => {
+    try {
+      // Try to use fileUrl directly; otherwise fetch metadata
+      let fileUrl = file.fileUrl
+      if (!fileUrl) {
+        try {
+          const meta = await filesAPI.getById(file._id)
+          const metaData = meta.data || meta
+          fileUrl = metaData?.fileUrl
+        } catch (e) {
+          console.warn('Failed to load file metadata for view', e)
+        }
+      }
+
+      if (!fileUrl) throw new Error('No viewable URL available')
+
+      const absoluteUrl = fileUrl.startsWith('http') ? fileUrl : `${API_ORIGIN}${fileUrl}`
+
+      // Prefer anchor open (less likely to be blocked than window.open)
+      const a = document.createElement('a')
+      a.href = absoluteUrl
+      a.target = '_blank'
+      a.rel = 'noopener noreferrer'
+      a.style.display = 'none'
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+
+      // As a fallback (e.g., needs auth headers), fetch as blob and open
+      // Note: This will only work if the server allows CORS for blobs
+      setTimeout(async () => {
+        try {
+          const res = await fetch(absoluteUrl, { credentials: 'include' })
+          if (!res.ok) return
+          const blob = await res.blob()
+          const url = URL.createObjectURL(blob)
+          window.open(url, '_blank', 'noopener,noreferrer')
+          setTimeout(() => URL.revokeObjectURL(url), 60_000)
+        } catch (_e) {}
+      }, 0)
+    } catch (error) {
+      console.error('Error opening file:', error)
+      alert('Unable to open the file. Please try downloading instead.')
     }
   }
 
@@ -340,6 +415,8 @@ export default function Dashboard({ setIsAuthenticated }) {
                   key={file._id}
                   file={file}
                   onDownload={handleDownload}
+                  onView={handleView}
+                  isDownloading={downloadingFile === file._id}
                 />
               ))}
             </div>
