@@ -46,28 +46,10 @@ export default function Login({ setIsAuthenticated }) {
 
     setLoading(true)
     try {
-      // Demo credentials - bypass API for demo
-      if (formData.email === 'demo@university.edu' && formData.password === 'demo123') {
-        const demoUser = {
-          id: 'demo-user-1',
-          name: 'Demo Student',
-          email: 'demo@university.edu',
-          college: 'Demo University'
-        }
-        
-        localStorage.setItem('authToken', 'demo-token-123')
-        localStorage.setItem('user', JSON.stringify(demoUser))
-        
-        setIsAuthenticated(true)
-        navigate('/dashboard')
-        return
-      }
-
-      // Real API call for other credentials
       const response = await authAPI.login(formData)
       
-      localStorage.setItem('authToken', response.token)
-      localStorage.setItem('user', JSON.stringify(response.user))
+      localStorage.setItem('authToken', response.data.token)
+      localStorage.setItem('user', JSON.stringify(response.data))
       
       setIsAuthenticated(true)
       navigate('/dashboard')
@@ -98,26 +80,6 @@ export default function Login({ setIsAuthenticated }) {
           </p>
         </div>
 
-        {/* Demo Credentials */}
-        <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4 mb-6">
-          <h3 className="text-blue-300 font-semibold mb-2">Demo Credentials</h3>
-          <div className="text-sm text-blue-200 space-y-1">
-            <p><strong>Email:</strong> demo@university.edu</p>
-            <p><strong>Password:</strong> demo123</p>
-          </div>
-          <button
-            type="button"
-            onClick={() => {
-              setFormData({
-                email: 'demo@university.edu',
-                password: 'demo123'
-              })
-            }}
-            className="mt-3 text-blue-300 hover:text-blue-200 text-sm underline"
-          >
-            Fill Demo Credentials
-          </button>
-        </div>
 
         {/* Form */}
         <div className="bg-dark-card border border-dark-border rounded-lg p-8">

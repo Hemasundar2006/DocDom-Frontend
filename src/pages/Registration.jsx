@@ -119,23 +119,6 @@ export default function Registration({ setIsAuthenticated }) {
           </p>
         </div>
 
-        {/* Demo Info */}
-        <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-4 mb-6">
-          <h3 className="text-green-300 font-semibold mb-2">Quick Demo</h3>
-          <p className="text-green-200 text-sm mb-3">
-            Want to try the app quickly? Use the demo login instead:
-          </p>
-          <div className="text-sm text-green-200 space-y-1">
-            <p><strong>Email:</strong> demo@university.edu</p>
-            <p><strong>Password:</strong> demo123</p>
-          </div>
-          <Link 
-            to="/login" 
-            className="mt-3 text-green-300 hover:text-green-200 text-sm underline"
-          >
-            Go to Login →
-          </Link>
-        </div>
 
         {/* Form */}
         <div className="bg-dark-card border border-dark-border rounded-lg p-8">

@@ -46,79 +46,133 @@ export default function Dashboard({ setIsAuthenticated }) {
 
   const courses = [
     { value: '', label: 'All Courses' },
-    { value: 'math', label: 'Mathematics' },
-    { value: 'physics', label: 'Physics' },
-    { value: 'chemistry', label: 'Chemistry' },
-    { value: 'cs', label: 'Computer Science' },
-    { value: 'english', label: 'English' },
-    { value: 'economics', label: 'Economics' },
+    { value: 'cse', label: 'Computer Science and Engineering (CSE)' },
+    { value: 'cse-ds', label: 'CSE (Data Science)' },
+    { value: 'cse-bs', label: 'CSE and Business Systems' },
+    { value: 'cse-aiml', label: 'CSE (Artificial Intelligence and Machine Learning)' },
+    { value: 'cse-iot', label: 'CSE (Internet of Things & Cyber Security Including Blockchain Technology)' },
+    { value: 'csit', label: 'Computer Science and Information Technology (CSIT)' },
+    { value: 'ai', label: 'Artificial Intelligence (AI)' },
+    { value: 'ai-ds', label: 'Artificial Intelligence and Data Science (AI & DS)' },
+    { value: 'it', label: 'Information Technology (IT)' },
+    { value: 'ece', label: 'Electronics and Communication Engineering (ECE)' },
+    { value: 'vlsi', label: 'Electronics Engineering (VLSI Design and Technology)' },
+    { value: 'eee', label: 'Electrical and Electronics Engineering (EEE)' },
+    { value: 'ce', label: 'Civil Engineering (CE)' },
+    { value: 'me', label: 'Mechanical Engineering (ME)' },
   ]
 
-  // Mock files data
+  // Sample files data with engineering courses
   const mockFiles = [
     {
       id: '1',
-      fileName: 'Linear Algebra Notes',
-      uploader: 'John Doe',
+      fileName: 'Data Structures and Algorithms Notes',
+      uploader: 'Alex Kumar',
       uploadedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
       fileSize: 2457600,
       fileType: 'application/pdf',
       semester: 'Semester 3',
-      course: 'Mathematics',
-      description: 'Comprehensive notes covering eigenvalues, eigenvectors, and matrix operations'
+      course: 'Computer Science and Engineering (CSE)',
+      description: 'Comprehensive notes covering arrays, linked lists, trees, and graph algorithms'
     },
     {
       id: '2',
-      fileName: 'Quantum Mechanics Chapter 5',
-      uploader: 'Jane Smith',
+      fileName: 'Machine Learning Fundamentals',
+      uploader: 'Priya Sharma',
       uploadedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
       fileSize: 3145728,
       fileType: 'application/pdf',
-      semester: 'Semester 4',
-      course: 'Physics',
-      description: 'Solutions to problems from chapter 5'
+      semester: 'Semester 6',
+      course: 'CSE (Artificial Intelligence and Machine Learning)',
+      description: 'Introduction to supervised and unsupervised learning algorithms'
     },
     {
       id: '3',
-      fileName: 'Data Structures Assignment',
-      uploader: 'Mike Johnson',
+      fileName: 'Database Management Systems Lab',
+      uploader: 'Rahul Singh',
       uploadedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
       fileSize: 1048576,
       fileType: 'application/pdf',
-      semester: 'Semester 3',
-      course: 'Computer Science',
-      description: 'Binary trees and graph algorithms implementation'
+      semester: 'Semester 4',
+      course: 'Computer Science and Engineering (CSE)',
+      description: 'SQL queries, normalization, and database design principles'
     },
     {
       id: '4',
-      fileName: 'Organic Chemistry Lab Manual',
-      uploader: 'Sarah Williams',
+      fileName: 'Digital Signal Processing',
+      uploader: 'Anita Patel',
       uploadedAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
       fileSize: 5242880,
       fileType: 'application/pdf',
-      semester: 'Semester 2',
-      course: 'Chemistry'
+      semester: 'Semester 5',
+      course: 'Electronics and Communication Engineering (ECE)',
+      description: 'Signal analysis, filtering, and Fourier transforms'
     },
     {
       id: '5',
-      fileName: 'English Literature Essay Guidelines',
-      uploader: 'Robert Brown',
+      fileName: 'Software Engineering Project Report',
+      uploader: 'Vikram Reddy',
       uploadedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
       fileSize: 524288,
       fileType: 'application/pdf',
-      semester: 'Semester 1',
-      course: 'English'
+      semester: 'Semester 7',
+      course: 'Computer Science and Engineering (CSE)',
+      description: 'Complete project documentation with UML diagrams and code'
     },
     {
       id: '6',
-      fileName: 'Microeconomics Study Guide',
-      uploader: 'Emily Davis',
+      fileName: 'Computer Networks Assignment',
+      uploader: 'Sneha Gupta',
       uploadedAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
       fileSize: 1572864,
       fileType: 'application/pdf',
-      semester: 'Semester 2',
-      course: 'Economics',
-      description: 'Complete study guide for midterm exam'
+      semester: 'Semester 5',
+      course: 'Computer Science and Engineering (CSE)',
+      description: 'OSI model, TCP/IP protocols, and network security'
+    },
+    {
+      id: '7',
+      fileName: 'Artificial Intelligence Lab Manual',
+      uploader: 'Rajesh Kumar',
+      uploadedAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
+      fileSize: 2097152,
+      fileType: 'application/pdf',
+      semester: 'Semester 6',
+      course: 'Artificial Intelligence (AI)',
+      description: 'Python implementations of AI algorithms and neural networks'
+    },
+    {
+      id: '8',
+      fileName: 'Microprocessor and Microcontroller',
+      uploader: 'Deepika Singh',
+      uploadedAt: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString(),
+      fileSize: 3145728,
+      fileType: 'application/pdf',
+      semester: 'Semester 4',
+      course: 'Electronics and Communication Engineering (ECE)',
+      description: '8086 architecture, assembly programming, and interfacing'
+    },
+    {
+      id: '9',
+      fileName: 'Data Science Project',
+      uploader: 'Arjun Mehta',
+      uploadedAt: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000).toISOString(),
+      fileSize: 4194304,
+      fileType: 'application/pdf',
+      semester: 'Semester 7',
+      course: 'CSE (Data Science)',
+      description: 'Complete data analysis project with Python and R implementations'
+    },
+    {
+      id: '10',
+      fileName: 'Information Security Notes',
+      uploader: 'Kavya Nair',
+      uploadedAt: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000).toISOString(),
+      fileSize: 2621440,
+      fileType: 'application/pdf',
+      semester: 'Semester 6',
+      course: 'CSE (Internet of Things & Cyber Security Including Blockchain Technology)',
+      description: 'Cryptography, network security, and blockchain fundamentals'
     }
   ]
 
@@ -172,8 +226,28 @@ export default function Dashboard({ setIsAuthenticated }) {
 
   const handleDownload = async (file) => {
     try {
-      // Simulate download
       console.log('Downloading file:', file.fileName)
+      
+      // For demo purposes, create a sample PDF blob
+      const sampleContent = `Sample PDF Content for ${file.fileName}
+      
+Course: ${file.course}
+Semester: ${file.semester}
+Uploaded by: ${file.uploader}
+Description: ${file.description || 'No description provided'}
+
+This is a demo file to demonstrate the download functionality.
+In a real application, this would be the actual file content.`
+      
+      const blob = new Blob([sampleContent], { type: 'text/plain' })
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `${file.fileName}.txt`
+      document.body.appendChild(a)
+      a.click()
+      window.URL.revokeObjectURL(url)
+      document.body.removeChild(a)
       
       // Uncomment when backend is ready
       // const blob = await filesAPI.download(file.id)
