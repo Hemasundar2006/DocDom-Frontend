@@ -112,7 +112,7 @@ export default function Dashboard({ setIsAuthenticated }) {
   const handleDownload = async (file) => {
     try {
       setDownloadingFile(file._id)
-      console.log('Downloading file:', file.fileName)
+      console.log('Downloading file:', file)
 
       // Ensure proper file extension for PDFs
       let fileName = file.fileName || file.name || 'document'
@@ -120,21 +120,51 @@ export default function Dashboard({ setIsAuthenticated }) {
 
       // Prefer using fileUrl from the list; if not present, fetch metadata by id
       let fileUrl = file.fileUrl
+      console.log('Initial fileUrl for download:', fileUrl)
+      
       if (!fileUrl) {
         try {
+          console.log('Fetching file metadata for download ID:', file._id)
           const meta = await filesAPI.getById(file._id)
+          console.log('Download metadata response:', meta)
           const metaData = meta.data || meta
           fileUrl = metaData?.fileUrl
           if (!fileName && metaData?.fileName) fileName = metaData.fileName
+          console.log('Resolved fileUrl for download:', fileUrl)
         } catch (e) {
           console.warn('Failed to load file metadata for download', e)
         }
       }
 
-      if (!fileUrl) throw new Error('No downloadable URL available')
+      if (!fileUrl) {
+        console.error('No fileUrl found for download:', file)
+        throw new Error('No downloadable URL available')
+      }
 
       // Build absolute URL if backend returns a relative path
-      const absoluteUrl = fileUrl.startsWith('http') ? fileUrl : `${API_ORIGIN}${fileUrl}`
+      let absoluteUrl = fileUrl.startsWith('http') ? fileUrl : `${API_ORIGIN}${fileUrl}`
+      console.log('Final download URL:', absoluteUrl)
+
+      // Test URL accessibility
+      try {
+        const testResponse = await fetch(absoluteUrl, { 
+          method: 'HEAD',
+          credentials: 'include'
+        })
+        console.log('Download URL test:', testResponse.status, testResponse.statusText)
+        
+        if (!testResponse.ok) {
+          console.warn(`Download URL not accessible (${testResponse.status}), using API endpoint...`)
+          // Use API endpoint for download
+          absoluteUrl = `${API_ORIGIN}/api/files/${file._id}`
+          console.log('Using API endpoint for download:', absoluteUrl)
+        }
+      } catch (testError) {
+        console.warn('Download URL test failed:', testError)
+        // Use API endpoint as fallback
+        absoluteUrl = `${API_ORIGIN}/api/files/${file._id}`
+        console.log('Using API endpoint as fallback for download:', absoluteUrl)
+      }
 
       const a = document.createElement('a')
       a.href = absoluteUrl
@@ -151,29 +181,76 @@ export default function Dashboard({ setIsAuthenticated }) {
     } catch (error) {
       console.error('Error downloading file:', error)
       setDownloadingFile(null)
-      alert('Failed to download file. Please try again.')
+      alert(`Failed to download file: ${error.message}. Please try again.`)
     }
   }
 
   const handleView = async (file) => {
     try {
+      console.log('Attempting to view file:', file)
+      
       // Try to use fileUrl directly; otherwise fetch metadata
       let fileUrl = file.fileUrl
+      console.log('Initial fileUrl:', fileUrl)
+      
       if (!fileUrl) {
         try {
+          console.log('Fetching file metadata for ID:', file._id)
           const meta = await filesAPI.getById(file._id)
+          console.log('File metadata response:', meta)
           const metaData = meta.data || meta
           fileUrl = metaData?.fileUrl
+          console.log('Resolved fileUrl from metadata:', fileUrl)
         } catch (e) {
           console.warn('Failed to load file metadata for view', e)
         }
       }
 
-      if (!fileUrl) throw new Error('No viewable URL available')
+      if (!fileUrl) {
+        console.error('No fileUrl found in file object:', file)
+        throw new Error('No viewable URL available')
+      }
 
-      const absoluteUrl = fileUrl.startsWith('http') ? fileUrl : `${API_ORIGIN}${fileUrl}`
+      let absoluteUrl = fileUrl.startsWith('http') ? fileUrl : `${API_ORIGIN}${fileUrl}`
+      console.log('Final absolute URL:', absoluteUrl)
 
-      // Prefer anchor open (less likely to be blocked than window.open)
+      // Test if the URL is accessible first
+      try {
+        const testResponse = await fetch(absoluteUrl, { 
+          method: 'HEAD',
+          credentials: 'include'
+        })
+        console.log('URL accessibility test:', testResponse.status, testResponse.statusText)
+        
+        if (!testResponse.ok) {
+          console.warn(`File not accessible via direct URL (${testResponse.status}), trying API endpoint...`)
+          // Try using the API endpoint instead
+          const apiUrl = `${API_ORIGIN}/api/files/${file._id}`
+          console.log('Trying API endpoint:', apiUrl)
+          
+          const apiResponse = await fetch(apiUrl, {
+            method: 'GET',
+            credentials: 'include',
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+            }
+          })
+          
+          if (apiResponse.ok) {
+            const fileData = await apiResponse.json()
+            console.log('API file data:', fileData)
+            // Update the URL to use the API endpoint
+            absoluteUrl = apiUrl
+          } else {
+            throw new Error(`File not accessible: ${testResponse.status}`)
+          }
+        }
+      } catch (testError) {
+        console.warn('URL accessibility test failed:', testError)
+        // Continue anyway, might work with direct opening
+      }
+
+      // Try direct opening first
       const a = document.createElement('a')
       a.href = absoluteUrl
       a.target = '_blank'
@@ -183,21 +260,38 @@ export default function Dashboard({ setIsAuthenticated }) {
       a.click()
       document.body.removeChild(a)
 
-      // As a fallback (e.g., needs auth headers), fetch as blob and open
-      // Note: This will only work if the server allows CORS for blobs
+      // Fallback: fetch as blob and open
       setTimeout(async () => {
         try {
-          const res = await fetch(absoluteUrl, { credentials: 'include' })
-          if (!res.ok) return
+          console.log('Attempting blob fallback for:', absoluteUrl)
+          
+          // Try the API endpoint for blob fetch
+          const apiUrl = `${API_ORIGIN}/api/files/${file._id}`
+          const res = await fetch(apiUrl, { 
+            credentials: 'include',
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+            }
+          })
+          
+          if (!res.ok) {
+            console.error('Blob fetch failed:', res.status, res.statusText)
+            return
+          }
+          
           const blob = await res.blob()
+          console.log('Blob created successfully:', blob.type, blob.size)
           const url = URL.createObjectURL(blob)
           window.open(url, '_blank', 'noopener,noreferrer')
           setTimeout(() => URL.revokeObjectURL(url), 60_000)
-        } catch (_e) {}
-      }, 0)
+        } catch (blobError) {
+          console.error('Blob fallback failed:', blobError)
+        }
+      }, 1000)
+
     } catch (error) {
       console.error('Error opening file:', error)
-      alert('Unable to open the file. Please try downloading instead.')
+      alert(`Unable to open the file: ${error.message}. Please try downloading instead.`)
     }
   }
 
@@ -319,20 +413,20 @@ export default function Dashboard({ setIsAuthenticated }) {
       {/* Main Content */}
       <main className="flex-1 flex flex-col min-w-0">
         {/* Header */}
-        <header className="bg-dark-card border-b border-dark-border p-4 lg:p-6">
-          <div className="flex items-center gap-4">
+        <header className="bg-dark-card border-b border-dark-border p-3 sm:p-4 lg:p-6">
+          <div className="flex items-center gap-2 sm:gap-4">
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="lg:hidden text-gray-300 hover:text-gray-100"
+              className="lg:hidden text-gray-300 hover:text-gray-100 p-1"
             >
-              <Menu size={24} />
+              <Menu size={20} />
             </button>
             
-            <div className="flex-1">
-              <h2 className="text-2xl font-bold text-gray-100 mb-1">
+            <div className="flex-1 min-w-0">
+              <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-100 mb-1 truncate">
                 Document Library
               </h2>
-              <p className="text-gray-400 text-sm">
+              <p className="text-gray-400 text-xs sm:text-sm hidden sm:block">
                 Browse and download shared documents
               </p>
             </div>
@@ -340,58 +434,62 @@ export default function Dashboard({ setIsAuthenticated }) {
             <Button
               onClick={() => setUploadModalOpen(true)}
               variant="primary"
-              className="flex items-center gap-2"
+              className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-4 py-2"
             >
-              <Upload size={20} />
+              <Upload size={16} className="sm:hidden" />
+              <Upload size={20} className="hidden sm:block" />
               <span className="hidden sm:inline">Upload</span>
             </Button>
           </div>
         </header>
 
         {/* Search and Filters */}
-        <div className="bg-dark-card border-b border-dark-border p-4 lg:p-6">
+        <div className="bg-dark-card border-b border-dark-border p-3 sm:p-4 lg:p-6">
           <div className="max-w-7xl">
-            <div className="mb-4">
+            <div className="mb-3 sm:mb-4">
               <SearchBar
                 value={filters.search}
                 onChange={handleSearchChange}
-                placeholder="Search by file name or content..."
+                placeholder="Search files..."
               />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-4">
               <Select
                 value={filters.semester}
                 onChange={handleFilterChange('semester')}
                 options={semesters}
-                placeholder="Filter by semester"
+                placeholder="Semester"
               />
 
               <Select
                 value={filters.course}
                 onChange={handleFilterChange('course')}
                 options={courses}
-                placeholder="Filter by course"
+                placeholder="Course"
               />
 
-              <div className="flex gap-2">
+              <div className="flex gap-2 sm:col-span-2 lg:col-span-1">
                 <Button
                   onClick={toggleMyUploads}
                   variant={filters.myUploads ? 'primary' : 'secondary'}
-                  className="flex-1 flex items-center justify-center gap-2"
+                  className="flex-1 flex items-center justify-center gap-1 sm:gap-2 text-xs sm:text-sm"
                 >
-                  <FileText size={18} />
-                  My Uploads
+                  <FileText size={16} className="sm:hidden" />
+                  <FileText size={18} className="hidden sm:block" />
+                  <span className="hidden sm:inline">My Uploads</span>
+                  <span className="sm:hidden">Mine</span>
                 </Button>
 
                 {hasActiveFilters && (
                   <Button
                     onClick={clearFilters}
                     variant="ghost"
-                    className="flex items-center gap-2"
+                    className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-4"
                   >
-                    <X size={18} />
-                    Clear
+                    <X size={16} className="sm:hidden" />
+                    <X size={18} className="hidden sm:block" />
+                    <span className="hidden sm:inline">Clear</span>
                   </Button>
                 )}
               </div>
@@ -400,7 +498,7 @@ export default function Dashboard({ setIsAuthenticated }) {
         </div>
 
         {/* Files Grid */}
-        <div className="flex-1 p-4 lg:p-6 overflow-y-auto scrollbar-thin pb-20 lg:pb-6">
+        <div className="flex-1 p-3 sm:p-4 lg:p-6 overflow-y-auto scrollbar-thin pb-20 lg:pb-6">
           {loading ? (
             <div className="flex items-center justify-center h-64">
               <div className="text-center">
@@ -431,7 +529,7 @@ export default function Dashboard({ setIsAuthenticated }) {
               </div>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 max-w-7xl">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6 max-w-7xl">
               {files.map((file) => (
                 <FileCard
                   key={file._id}

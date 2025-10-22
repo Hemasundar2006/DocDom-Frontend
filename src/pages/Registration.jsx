@@ -98,7 +98,7 @@ export default function Registration({ setIsAuthenticated }) {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-12">
+    <div className="min-h-screen flex items-center justify-center px-4 py-6 sm:py-12">
       <div className="max-w-md w-full">
         {/* Header */}
         <div className="text-center mb-8">
@@ -117,7 +117,7 @@ export default function Registration({ setIsAuthenticated }) {
 
 
         {/* Form */}
-        <div className="bg-dark-card border border-dark-border rounded-lg p-8">
+        <div className="bg-dark-card border border-dark-border rounded-lg p-4 sm:p-8">
           <form onSubmit={handleSubmit}>
             <Input
               label="Full Name"

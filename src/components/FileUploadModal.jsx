@@ -185,7 +185,7 @@ export default function FileUploadModal({ isOpen, onClose, onUploadSuccess }) {
       <form onSubmit={handleSubmit}>
         {/* Drag and Drop Area */}
         <div
-          className={`relative border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
+          className={`relative border-2 border-dashed rounded-lg p-4 sm:p-6 lg:p-8 text-center transition-colors ${
             dragActive
               ? 'border-primary bg-primary/10'
               : errors.file
@@ -224,8 +224,8 @@ export default function FileUploadModal({ isOpen, onClose, onUploadSuccess }) {
             </div>
           ) : (
             <>
-              <Upload className="mx-auto text-gray-400 mb-4" size={48} />
-              <p className="text-gray-300 mb-2">
+              <Upload className="mx-auto text-gray-400 mb-3 sm:mb-4" size={40} />
+              <p className="text-gray-300 mb-2 text-sm sm:text-base">
                 Drag and drop your file here, or{' '}
                 <button
                   type="button"
@@ -235,8 +235,8 @@ export default function FileUploadModal({ isOpen, onClose, onUploadSuccess }) {
                   browse
                 </button>
               </p>
-              <p className="text-gray-500 text-sm">
-                Supported formats: PDF, DOCX, JPG, PNG, GIF, WEBP (Max 50MB)
+              <p className="text-gray-500 text-xs sm:text-sm">
+                Supported: PDF, DOCX, JPG, PNG, GIF, WEBP (Max 50MB)
               </p>
             </>
           )}
@@ -274,7 +274,7 @@ export default function FileUploadModal({ isOpen, onClose, onUploadSuccess }) {
             required
           />
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <Select
               label="Semester"
               value={formData.semester}
@@ -315,12 +315,12 @@ export default function FileUploadModal({ isOpen, onClose, onUploadSuccess }) {
             </div>
           )}
 
-          <div className="flex gap-3">
+          <div className="flex flex-col sm:flex-row gap-3">
             <Button
               type="button"
               variant="secondary"
               onClick={onClose}
-              className="flex-1"
+              className="flex-1 order-2 sm:order-1"
               disabled={loading}
             >
               Cancel
@@ -329,7 +329,7 @@ export default function FileUploadModal({ isOpen, onClose, onUploadSuccess }) {
               type="submit"
               variant="primary"
               loading={loading}
-              className="flex-1"
+              className="flex-1 order-1 sm:order-2"
             >
               Upload
             </Button>
