@@ -340,10 +340,10 @@ export default function Dashboard({ setIsAuthenticated }) {
             <Button
               onClick={() => setUploadModalOpen(true)}
               variant="primary"
-              className="hidden lg:flex items-center gap-2"
+              className="flex items-center gap-2"
             >
               <Upload size={20} />
-              Upload
+              <span className="hidden sm:inline">Upload</span>
             </Button>
           </div>
         </header>
@@ -400,7 +400,7 @@ export default function Dashboard({ setIsAuthenticated }) {
         </div>
 
         {/* Files Grid */}
-        <div className="flex-1 p-4 lg:p-6 overflow-y-auto scrollbar-thin">
+        <div className="flex-1 p-4 lg:p-6 overflow-y-auto scrollbar-thin pb-20 lg:pb-6">
           {loading ? (
             <div className="flex items-center justify-center h-64">
               <div className="text-center">
@@ -445,6 +445,14 @@ export default function Dashboard({ setIsAuthenticated }) {
           )}
         </div>
       </main>
+
+      {/* Mobile Floating Action Button */}
+      <button
+        onClick={() => setUploadModalOpen(true)}
+        className="fixed bottom-6 right-6 lg:hidden bg-primary hover:bg-primary-light text-white p-4 rounded-full shadow-lg z-50 transition-colors"
+      >
+        <Upload size={24} />
+      </button>
 
       {/* Upload Modal */}
       <FileUploadModal
