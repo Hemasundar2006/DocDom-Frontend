@@ -39,7 +39,7 @@ export default function SplashScreen({ onComplete }) {
           <div className="w-48 h-48 mx-auto mb-6 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center shadow-2xl">
             <img 
               src="/qis collede logo.jpeg" 
-              alt="QIS College of Pharmacy Logo" 
+              alt="IS College of Engineering and Technology logo" 
               className="w-40 h-40 object-contain rounded-full"
             />
           </div>
@@ -47,7 +47,7 @@ export default function SplashScreen({ onComplete }) {
 
         {/* College Name */}
         <h1 className="text-4xl md:text-5xl font-bold text-white mb-2">
-          QIS College of Pharmacy
+          QIS College of Engineering and Technology
         </h1>
         <p className="text-lg md:text-xl text-blue-200 mb-8">
           Sri Nidamanuri Educational Society
@@ -56,7 +56,7 @@ export default function SplashScreen({ onComplete }) {
         {/* Made by text */}
         <div className="mb-8">
           <p className="text-lg text-yellow-300 font-semibold">
-            Made by 2ND YEAR ECE-6 STUDENTS
+            Made by 2nd Year ECE-6 Students 
           </p>
         </div>
 
