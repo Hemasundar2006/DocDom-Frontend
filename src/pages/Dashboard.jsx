@@ -25,6 +25,7 @@ export default function Dashboard({ setIsAuthenticated }) {
   const [uploadModalOpen, setUploadModalOpen] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [downloadingFile, setDownloadingFile] = useState(null)
+  const [viewingFile, setViewingFile] = useState(null)
   const [filters, setFilters] = useState({
     search: '',
     semester: '',
@@ -222,6 +223,7 @@ export default function Dashboard({ setIsAuthenticated }) {
 
   const handleView = async (file) => {
     try {
+      setViewingFile(file._id)
       console.log('Attempting to view file:', file)
       
       // Try to use fileUrl directly; otherwise fetch metadata
@@ -249,83 +251,17 @@ export default function Dashboard({ setIsAuthenticated }) {
       let absoluteUrl = fileUrl.startsWith('http') ? fileUrl : `${API_ORIGIN}${fileUrl}`
       console.log('Final absolute URL:', absoluteUrl)
 
-      // Test if the URL is accessible first
-      try {
-        const testResponse = await fetch(absoluteUrl, { 
-          method: 'HEAD',
-          credentials: 'include'
-        })
-        console.log('URL accessibility test:', testResponse.status, testResponse.statusText)
-        
-        if (!testResponse.ok) {
-          console.warn(`File not accessible via direct URL (${testResponse.status}), trying API endpoint...`)
-          // Try using the API endpoint instead
-          const apiUrl = `${API_ORIGIN}/api/files/${file._id}`
-          console.log('Trying API endpoint:', apiUrl)
-          
-          const apiResponse = await fetch(apiUrl, {
-            method: 'GET',
-            credentials: 'include',
-            headers: {
-              'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-            }
-          })
-          
-          if (apiResponse.ok) {
-            const fileData = await apiResponse.json()
-            console.log('API file data:', fileData)
-            // Update the URL to use the API endpoint
-            absoluteUrl = apiUrl
-          } else {
-            throw new Error(`File not accessible: ${testResponse.status}`)
-          }
-        }
-      } catch (testError) {
-        console.warn('URL accessibility test failed:', testError)
-        // Continue anyway, might work with direct opening
-      }
-
-      // Try direct opening first
-      const a = document.createElement('a')
-      a.href = absoluteUrl
-      a.target = '_blank'
-      a.rel = 'noopener noreferrer'
-      a.style.display = 'none'
-      document.body.appendChild(a)
-      a.click()
-      document.body.removeChild(a)
-
-      // Fallback: fetch as blob and open
-      setTimeout(async () => {
-        try {
-          console.log('Attempting blob fallback for:', absoluteUrl)
-          
-          // Try the API endpoint for blob fetch
-          const apiUrl = `${API_ORIGIN}/api/files/${file._id}`
-          const res = await fetch(apiUrl, { 
-            credentials: 'include',
-            headers: {
-              'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-            }
-          })
-          
-          if (!res.ok) {
-            console.error('Blob fetch failed:', res.status, res.statusText)
-            return
-          }
-          
-          const blob = await res.blob()
-          console.log('Blob created successfully:', blob.type, blob.size)
-          const url = URL.createObjectURL(blob)
-          window.open(url, '_blank', 'noopener,noreferrer')
-          setTimeout(() => URL.revokeObjectURL(url), 60_000)
-        } catch (blobError) {
-          console.error('Blob fallback failed:', blobError)
-        }
-      }, 1000)
+      // Simple approach: directly open in new tab for all devices
+      // This ensures files open in browser instead of downloading
+      console.log('Opening file in new tab:', absoluteUrl)
+      window.open(absoluteUrl, '_blank', 'noopener,noreferrer')
+      
+      // Reset viewing state after a short delay
+      setTimeout(() => setViewingFile(null), 1000)
 
     } catch (error) {
       console.error('Error opening file:', error)
+      setViewingFile(null)
       alert(`Unable to open the file: ${error.message}. Please try downloading instead.`)
     }
   }
@@ -572,6 +508,7 @@ export default function Dashboard({ setIsAuthenticated }) {
                   onDownload={handleDownload}
                   onView={handleView}
                   isDownloading={downloadingFile === file._id}
+                  isViewing={viewingFile === file._id}
                 />
               ))}
             </div>

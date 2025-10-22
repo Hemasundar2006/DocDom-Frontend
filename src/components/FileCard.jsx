@@ -2,7 +2,7 @@ import { Download, FileText, Image, FileIcon } from 'lucide-react'
 import { formatFileSize, formatDate } from '../utils/validation'
 import Button from './Button'
 
-export default function FileCard({ file, onDownload, onView, isDownloading = false }) {
+export default function FileCard({ file, onDownload, onView, isDownloading = false, isViewing = false }) {
   // Debug: Log the file object to see its structure
   console.log('FileCard received file:', file)
   
@@ -55,10 +55,12 @@ export default function FileCard({ file, onDownload, onView, isDownloading = fal
           <Button
             onClick={() => onView?.(file)}
             variant="secondary"
-            className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3 py-1 sm:py-2"
+            className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3 py-1 sm:py-2 hover:bg-primary/20 transition-colors"
+            title="View file in new tab (opens in browser)"
+            disabled={isViewing}
           >
-            <span className="hidden sm:inline">View</span>
-            <span className="sm:hidden">👁</span>
+            <span className="hidden sm:inline">{isViewing ? 'Opening...' : 'View'}</span>
+            <span className="sm:hidden">{isViewing ? '⏳' : '👁'}</span>
           </Button>
           <Button
             onClick={() => onDownload(file)}

@@ -15,7 +15,10 @@ const api = axios.create({
   baseURL: API_URL,
   headers: {
     'Content-Type': 'application/json'
-  }
+  },
+  timeout: 600000, // 10 minutes timeout for large file uploads
+  maxContentLength: 50 * 1024 * 1024, // 50MB max content length
+  maxBodyLength: 50 * 1024 * 1024, // 50MB max body length
 })
 
 // Add token to requests
@@ -76,10 +79,20 @@ export const filesAPI = {
     return response.data
   },
   
-  upload: async (formData) => {
+  upload: async (formData, onProgress) => {
     const response = await api.post('/files/upload', formData, {
       headers: {
         'Content-Type': 'multipart/form-data'
+      },
+      timeout: 600000, // 10 minutes timeout for large file uploads
+      maxContentLength: 50 * 1024 * 1024, // 50MB max content length
+      maxBodyLength: 50 * 1024 * 1024, // 50MB max body length
+      onUploadProgress: (progressEvent) => {
+        if (onProgress) {
+          onProgress(progressEvent)
+        }
+        const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total)
+        console.log(`Upload Progress: ${percentCompleted}%`)
       }
     })
     return response.data

@@ -143,22 +143,14 @@ export default function FileUploadModal({ isOpen, onClose, onUploadSuccess }) {
       uploadData.append('course', formData.course)
       uploadData.append('description', formData.description)
 
-      // Simulate upload progress
-      const progressInterval = setInterval(() => {
-        setUploadProgress((prev) => {
-          if (prev >= 90) {
-            clearInterval(progressInterval)
-            return prev
-          }
-          return prev + 10
-        })
-      }, 200)
-
-      const response = await filesAPI.upload(uploadData)
+      // Use real upload progress
+      const response = await filesAPI.upload(uploadData, (progressEvent) => {
+        const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total)
+        setUploadProgress(percentCompleted)
+      })
       console.log('Upload response:', response)
       
       setUploadProgress(100)
-      clearInterval(progressInterval)
 
       // Reset form
       setSelectedFile(null)
@@ -172,8 +164,20 @@ export default function FileUploadModal({ isOpen, onClose, onUploadSuccess }) {
         setUploadProgress(0)
       }, 500)
     } catch (error) {
+      let errorMessage = 'Upload failed. Please try again.'
+      
+      if (error.response?.status === 413) {
+        errorMessage = 'File too large. The server may have a lower limit than 50MB. Please compress your file or choose a smaller file.'
+      } else if (error.response?.status === 400) {
+        errorMessage = error.response?.data?.message || 'Invalid file. Please check the file format and size.'
+      } else if (error.code === 'ECONNABORTED') {
+        errorMessage = 'Upload timeout. The file may be too large or connection is slow.'
+      } else if (error.response?.data?.message) {
+        errorMessage = error.response.data.message
+      }
+      
       setErrors({ 
-        submit: error.response?.data?.message || 'Upload failed. Please try again.' 
+        submit: errorMessage
       })
     } finally {
       setLoading(false)
