@@ -131,9 +131,53 @@ export default function Dashboard({ setIsAuthenticated }) {
       let fileName = file.fileName || file.name || 'document'
       if (!fileName.includes('.')) fileName = `${fileName}.pdf`
 
-      // Use the new download helper function
-      await downloadFile(file._id, fileName)
-      setDownloadingFile(null)
+      // Try the new download endpoint first
+      try {
+        await downloadFile(file._id, fileName)
+        setDownloadingFile(null)
+        return
+      } catch (downloadError) {
+        console.warn('New download endpoint failed, trying fallback approach:', downloadError)
+        
+        // Fallback to using fileUrl like the view function does
+        let fileUrl = file.fileUrl
+        console.log('Initial fileUrl for download:', fileUrl)
+        
+        if (!fileUrl) {
+          try {
+            console.log('Fetching file metadata for download ID:', file._id)
+            const meta = await filesAPI.getById(file._id)
+            console.log('Download metadata response:', meta)
+            const metaData = meta.data || meta
+            fileUrl = metaData?.fileUrl
+            if (!fileName && metaData?.fileName) fileName = metaData.fileName
+            console.log('Resolved fileUrl for download:', fileUrl)
+          } catch (e) {
+            console.warn('Failed to load file metadata for download', e)
+          }
+        }
+
+        if (!fileUrl) {
+          throw new Error('No downloadable URL available')
+        }
+
+        // Build absolute URL if backend returns a relative path
+        let absoluteUrl = fileUrl.startsWith('http') ? fileUrl : `${API_ORIGIN}${fileUrl}`
+        console.log('Final download URL:', absoluteUrl)
+
+        // Use direct download approach
+        const a = document.createElement('a')
+        a.href = absoluteUrl
+        a.download = fileName
+        a.style.display = 'none'
+        document.body.appendChild(a)
+        a.click()
+
+        setTimeout(() => {
+          document.body.removeChild(a)
+          setDownloadingFile(null)
+        }, 100)
+      }
 
     } catch (error) {
       console.error('Error downloading file:', error)
