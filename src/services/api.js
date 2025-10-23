@@ -116,6 +116,43 @@ export const filesAPI = {
   }
 }
 
+// Helper function to create download link with token
+export const createDownloadLink = (fileId) => {
+  const token = localStorage.getItem('authToken')
+  return `https://docdom-backend.onrender.com/api/files/${fileId}/download?token=${token}`
+}
+
+// Helper function to download file with proper authentication
+export const downloadFile = async (fileId, fileName) => {
+  try {
+    const response = await fetch(`https://docdom-backend.onrender.com/api/files/${fileId}/download`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+      }
+    })
+
+    if (response.ok) {
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = fileName
+      a.style.display = 'none'
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      window.URL.revokeObjectURL(url)
+    } else {
+      console.error('Download failed:', response.statusText)
+      throw new Error(`Download failed: ${response.status} ${response.statusText}`)
+    }
+  } catch (error) {
+    console.error('Download error:', error)
+    throw error
+  }
+}
+
 // Courses API
 export const coursesAPI = {
   getAll: async () => {

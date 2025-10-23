@@ -15,7 +15,7 @@ import Select from '../components/Select'
 import Button from '../components/Button'
 import FileCard from '../components/FileCard'
 import FileUploadModal from '../components/FileUploadModal'
-import { filesAPI, authAPI, API_ORIGIN } from '../services/api'
+import { filesAPI, authAPI, API_ORIGIN, downloadFile } from '../services/api'
 
 export default function Dashboard({ setIsAuthenticated }) {
   const navigate = useNavigate()
@@ -127,104 +127,13 @@ export default function Dashboard({ setIsAuthenticated }) {
       setDownloadingFile(file._id)
       console.log('Downloading file:', file)
 
-      // Ensure proper file extension for PDFs
+      // Get filename from file object
       let fileName = file.fileName || file.name || 'document'
       if (!fileName.includes('.')) fileName = `${fileName}.pdf`
 
-      // Prefer using fileUrl from the list; if not present, fetch metadata by id
-      let fileUrl = file.fileUrl
-      console.log('Initial fileUrl for download:', fileUrl)
-      
-      if (!fileUrl) {
-        try {
-          console.log('Fetching file metadata for download ID:', file._id)
-          const meta = await filesAPI.getById(file._id)
-          console.log('Download metadata response:', meta)
-          const metaData = meta.data || meta
-          fileUrl = metaData?.fileUrl
-          if (!fileName && metaData?.fileName) fileName = metaData.fileName
-          console.log('Resolved fileUrl for download:', fileUrl)
-        } catch (e) {
-          console.warn('Failed to load file metadata for download', e)
-        }
-      }
-
-      if (!fileUrl) {
-        console.error('No fileUrl found for download:', file)
-        throw new Error('No downloadable URL available')
-      }
-
-      // Build absolute URL if backend returns a relative path
-      let absoluteUrl = fileUrl.startsWith('http') ? fileUrl : `${API_ORIGIN}${fileUrl}`
-      console.log('Final download URL:', absoluteUrl)
-
-      // Test URL accessibility
-      try {
-        const testResponse = await fetch(absoluteUrl, { 
-          method: 'HEAD',
-          credentials: 'include'
-        })
-        console.log('Download URL test:', testResponse.status, testResponse.statusText)
-        
-        if (!testResponse.ok) {
-          console.warn(`Download URL not accessible (${testResponse.status}), using API endpoint...`)
-          // Use API endpoint for download
-          absoluteUrl = `${API_ORIGIN}/api/files/${file._id}`
-          console.log('Using API endpoint for download:', absoluteUrl)
-        }
-      } catch (testError) {
-        console.warn('Download URL test failed:', testError)
-        // Use API endpoint as fallback
-        absoluteUrl = `${API_ORIGIN}/api/files/${file._id}`
-        console.log('Using API endpoint as fallback for download:', absoluteUrl)
-      }
-
-      // Fetch file as blob for proper download with filename
-      try {
-        const response = await fetch(absoluteUrl, {
-          method: 'GET',
-          credentials: 'include',
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-          }
-        })
-
-        if (!response.ok) {
-          throw new Error(`Download failed: ${response.status}`)
-        }
-
-        const blob = await response.blob()
-        console.log('Downloaded blob:', blob.type, blob.size)
-        
-        // Create blob URL and trigger download
-        const blobUrl = window.URL.createObjectURL(blob)
-        const a = document.createElement('a')
-        a.href = blobUrl
-        a.download = fileName
-        a.style.display = 'none'
-        document.body.appendChild(a)
-        a.click()
-
-        setTimeout(() => {
-          document.body.removeChild(a)
-          window.URL.revokeObjectURL(blobUrl)
-          setDownloadingFile(null)
-        }, 100)
-      } catch (fetchError) {
-        console.error('Blob download failed, trying direct download:', fetchError)
-        // Fallback to direct download
-        const a = document.createElement('a')
-        a.href = absoluteUrl
-        a.download = fileName
-        a.style.display = 'none'
-        document.body.appendChild(a)
-        a.click()
-
-        setTimeout(() => {
-          document.body.removeChild(a)
-          setDownloadingFile(null)
-        }, 100)
-      }
+      // Use the new download helper function
+      await downloadFile(file._id, fileName)
+      setDownloadingFile(null)
 
     } catch (error) {
       console.error('Error downloading file:', error)
